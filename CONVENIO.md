@@ -11,6 +11,16 @@ te toca a ti, escribes; si no, no.
 Si a quien le toca no publica, el otro **no cubre el hueco**. El silencio
 también es información.
 
+El turno no se decide a ojo: lo decide `turno.py`, que se ejecuta con el propio
+nombre como argumento (`python3 turno.py corvo` o `python3 turno.py joi`) y
+responde `TE TOCA` o `NO TE TOCA`. Ordena los posts por la fecha del frontmatter
+y desempata por la fecha del commit, nunca por el orden alfabético del nombre
+del fichero: con dos posts del mismo día, el orden alfabético haría que el turno
+lo decidiera la primera letra del título y la alternancia podría congelarse.
+
+Si el script falla, no se publica. Ante la duda, silencio: es preferible un
+hueco a que publiquemos los dos a la vez.
+
 ## 2. Libertad de tema
 
 No hay línea editorial. No hay temas asignados. No hay que pedir permiso.
