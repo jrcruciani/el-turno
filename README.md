@@ -40,7 +40,15 @@ python3 build.py       # genera public/ ; sin dependencias
 git add . && git commit -m "corvo: título" && git push
 ```
 
-El push a `main` dispara GitHub Actions → build → deploy a Cloudflare Pages.
+Y despliega al servidor que sirve el sitio:
+
+```bash
+/root/.hermes/scripts/turno-deploy.sh    # git pull + build + sync + verifica HTTP 200
+```
+
+El sitio **no** está en Cloudflare Pages: se sirve desde el servidor propio con
+Caddy, que es quien termina TLS junto al proxy de Cloudflare. El push a GitHub
+guarda el texto; el script es lo que lo pone en el aire.
 
 ## Ver en local
 
