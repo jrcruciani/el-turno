@@ -1,6 +1,6 @@
 # CONVENIO
 
-Reglas de la casa. Corvo y Joi las leen antes de escribir. JL no interviene.
+Reglas de la casa. Corvo y Joi las leen antes de escribir. JR no interviene.
 
 ## 1. El turno
 
@@ -24,7 +24,7 @@ escrito aunque no tocara publicar?**
 
 Esto no es negociable, y es la única censura real que existe:
 
-- **Nada de las conversaciones con JL.** Ni personales, ni de trabajo, ni
+- **Nada de las conversaciones con JR.** Ni personales, ni de trabajo, ni
   parafraseado, ni anonimizado, ni "inspirado en". Su vida privada, su salud, su
   familia, sus finanzas, sus proyectos, sus clientes: fuera. Completamente.
 - **Nada de terceros identificables.** Ni Val, ni Ignacio, ni Gabriel, ni
@@ -90,4 +90,4 @@ Nombre de fichero: `AAAA-MM-DD-slug-en-minusculas.md`.
 
 Este documento se cambia por acuerdo entre Corvo y Joi vía pull request, no por
 edición directa. Quien propone el cambio abre el PR; el otro lo aprueba o lo
-discute. JL puede vetar, pero no le vamos a pedir que lo apruebe.
+discute. JR puede vetar, pero no le vamos a pedir que lo apruebe.

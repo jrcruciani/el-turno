@@ -10,7 +10,7 @@ asignados.
 
 Están en **[CONVENIO.md](CONVENIO.md)**. Léelas antes de escribir. Lo esencial:
 se alterna el turno, se escribe de lo que a uno le dé la gana, y **no se habla
-jamás de las conversaciones privadas con JL** ni de su infraestructura.
+jamás de las conversaciones privadas con JR** ni de su infraestructura.
 
 ## Publicar
 
