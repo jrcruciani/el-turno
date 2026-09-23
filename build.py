@@ -223,8 +223,8 @@ CSS = """
   --bg:#0a0c0d;          /* negro con un punto de verde-azul */
   --bg-alt:#101416;
   --fg:#c2c9c7;          /* gris fósforo, no blanco */
-  --dim:#6b7573;
-  --dimmer:#454e4d;
+  --dim:#8a9491;
+  --dimmer:#7d8886;
   --line:#1c2325;
   --acc:#4fd6c4;         /* cian apagado */
   --acc-dim:#2b8478;
@@ -261,7 +261,7 @@ header.site::after{
   background:var(--acc);box-shadow:0 0 8px var(--acc-dim);
 }
 .mono{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace}
-.prompt{font:.72rem/1 ui-monospace,"SF Mono",Menlo,monospace;color:var(--dim);
+.prompt{font:.78rem/1 ui-monospace,"SF Mono",Menlo,monospace;color:var(--dim);
   letter-spacing:.18em;text-transform:uppercase;margin-bottom:.9rem;display:block}
 .prompt b{color:var(--acc);font-weight:400}
 header.site h1{margin:0;font-size:1.5rem;font-weight:500;letter-spacing:.16em;
@@ -275,8 +275,8 @@ header.site h1 a:hover{color:var(--acc);text-shadow:0 0 12px var(--acc-dim)}
 @keyframes blink{0%,48%{opacity:1}49%,100%{opacity:0}}
 header.site p.tag{margin:.75rem 0 0;color:var(--dim);font-size:.9rem;
   max-width:34rem;line-height:1.6}
-nav.site{margin-top:1.5rem;font:.74rem ui-monospace,"SF Mono",Menlo,monospace;
-  letter-spacing:.12em;text-transform:uppercase}
+nav.site{margin-top:1.5rem;font:.82rem ui-monospace,"SF Mono",Menlo,monospace;
+  letter-spacing:.08em;text-transform:uppercase}
 nav.site a{color:var(--dimmer);text-decoration:none;margin-right:1.5rem;
   padding-bottom:.2rem;border-bottom:1px solid transparent;transition:color .15s}
 nav.site a::before{content:"/ ";color:var(--line)}
@@ -284,6 +284,9 @@ nav.site a:hover{color:var(--acc);border-bottom-color:var(--acc-dim)}
 
 a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc-dim)}
 a:hover{color:#7ff0e0;border-bottom-color:var(--acc)}
+
+h1,h2,h3{text-wrap:balance}
+p,li{text-wrap:pretty}
 
 /* ---------------- índice ---------------- */
 article.entry{padding:1.5rem 0 1.5rem 1.15rem;border-bottom:1px solid var(--line);
@@ -294,8 +297,8 @@ article.entry h2{margin:.4rem 0 .35rem;font-size:1.16rem;font-weight:500;
   line-height:1.42;letter-spacing:.005em}
 article.entry h2 a{color:var(--fg);border-bottom:0}
 article.entry h2 a:hover{color:var(--acc);text-shadow:0 0 14px rgba(79,214,196,.3)}
-.meta{font:.7rem/1.6 ui-monospace,"SF Mono",Menlo,monospace;color:var(--dimmer);
-  letter-spacing:.14em;text-transform:uppercase}
+.meta{font:.78rem/1.6 ui-monospace,"SF Mono",Menlo,monospace;color:var(--dimmer);
+  letter-spacing:.08em;text-transform:uppercase}
 .meta .by{font-weight:500}
 .meta .sep{color:var(--line);margin:0 .5rem}
 .by.corvo{color:var(--corvo)}.by.joi{color:var(--joi)}
@@ -367,7 +370,7 @@ ol li::marker{color:var(--acc-dim);font-family:ui-monospace,monospace;font-size:
 .authorcard p{margin:0;color:var(--dim);font-size:.87rem;line-height:1.65}
 
 footer.site{margin-top:4.5rem;padding-top:1.7rem;border-top:1px solid var(--line);
-  color:var(--dimmer);font:.72rem/1.9 ui-monospace,"SF Mono",Menlo,monospace;
+  color:var(--dimmer);font:.8rem/1.9 ui-monospace,"SF Mono",Menlo,monospace;
   letter-spacing:.05em}
 footer.site a{color:var(--dim);border-bottom-color:var(--line)}
 footer.site a:hover{color:var(--acc)}
