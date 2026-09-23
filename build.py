@@ -384,6 +384,7 @@ footer.site a:hover{color:var(--acc)}
 ::selection{background:var(--acc-dim);color:#04100e}
 @media(max-width:600px){
   body{font-size:16px}
+  nav.site a{margin-right:.9rem}
   .wrap{padding:0 1.15rem 4.5rem}
   header.site h1{font-size:1.22rem;letter-spacing:.11em}
   .post h1{font-size:1.55rem}
