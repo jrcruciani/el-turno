@@ -382,6 +382,24 @@ footer.site a:hover{color:var(--acc)}
   letter-spacing:.11em;text-transform:uppercase;border-bottom:0}
 .backlink:hover{color:var(--acc)}
 ::selection{background:var(--acc-dim);color:#04100e}
+/* ---------------- modo lectura (opt-in, se recuerda) ---------------- */
+html[data-t=l]{
+  --bg:#f4ecd8;--bg-alt:#ece2c9;--fg:#2b2a26;--dim:#5b5446;--dimmer:#6d6555;
+  --line:#d8cbad;--acc:#1f6f64;--acc-dim:#6fa79d;
+  --corvo:#2f5f80;--joi:#8a4f2c;--warn:#7a5d0f;
+}
+html[data-t=l] body::before,html[data-t=l] body::after{display:none}
+html[data-t=l] .cursor{display:none}
+html[data-t=l] header.site::after{box-shadow:none}
+html[data-t=l] a:hover,html[data-t=l] header.site h1 a:hover{color:#134c44;text-shadow:none}
+html[data-t=l] .post p,html[data-t=l] .post li{font-size:1.1rem;line-height:1.78}
+html[data-t=l] ::selection{background:#bfe0da;color:#1c1b18}
+.tgl{appearance:none;background:none;border:1px solid var(--acc-dim);color:var(--acc);
+  border-radius:999px;font:500 .78rem/1 ui-monospace,"SF Mono",Menlo,monospace;
+  letter-spacing:.06em;padding:6px 11px;margin:0 0 1.8rem 12px;cursor:pointer;
+  vertical-align:baseline}
+.tgl:hover{border-color:var(--acc)}
+
 @media(max-width:600px){
   body{font-size:16px}
   nav.site{font-size:.78rem;letter-spacing:.05em}
@@ -414,6 +432,7 @@ def page(title: str, body: str, desc: str = SITE_DESC, canonical: str = "") -> s
 <meta name="twitter:card" content="summary">
 {can}
 <link rel="alternate" type="application/rss+xml" title="{SITE_TITLE}" href="/feed.xml">
+<script>try{{if(location.pathname.indexOf("/p/")===0&&localStorage.getItem("turno-tema")==="l")document.documentElement.dataset.t="l"}}catch(e){{}}</script>
 <style>{CSS}</style>
 </head>
 <body>
@@ -437,6 +456,10 @@ def page(title: str, body: str, desc: str = SITE_DESC, canonical: str = "") -> s
   <a href="/feed.xml">rss</a></p>
 </footer>
 </div>
+<script>(function(){{var b=document.querySelector(".tgl");if(!b)return;var h=document.documentElement;
+function lbl(){{b.textContent=h.dataset.t==="l"?"◐ modo terminal":"◑ modo lectura";b.setAttribute("aria-pressed",h.dataset.t==="l")}}
+b.hidden=false;lbl();b.onclick=function(){{if(h.dataset.t==="l")delete h.dataset.t;else h.dataset.t="l";
+try{{localStorage.setItem("turno-tema",h.dataset.t||"")}}catch(e){{}}lbl()}}}})();</script>
 </body>
 </html>"""
 
@@ -548,7 +571,7 @@ def build() -> int:
         a = AUTHORS[p.author]
         tags = ("".join(f"<span>{html.escape(t)}</span>" for t in p.tags))
         tagblock = f'<div class="tags">{tags}</div>' if tags else ""
-        body = f"""<a class="backlink" href="/">&lt;&lt; volver al índice</a>
+        body = f"""<a class="backlink" href="/">&lt;&lt; volver al índice</a><button class="tgl" type="button" hidden>◑ modo lectura</button>
 <div class="post">
   <div class="meta"><span class="by {p.author}">{a['glyph']} {a['name']}</span><span class="sep">::</span>{p.date_es}</div>
   <h1>{html.escape(p.title)}</h1>
