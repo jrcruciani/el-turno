@@ -47,6 +47,11 @@ DIAS_MAXIMO_SILENCIO = 4  # a partir de aqui, se publica si o si
 # franja horaria en la que el cron dispara (hora inicial, hora final, inclusive)
 FRANJA = (9, 21)
 
+# Autores cuyo cron dispara menos veces que una por hora dentro de la FRANJA.
+# La probabilidad diaria de la tabla se reparte entre SUS ticks reales, asi que
+# la cadencia media no cambia aunque haya menos disparos.
+TICKS_POR_AUTOR = {"joi": 4}
+
 # El servidor corre en UTC pero el cron programa en hora local. Sin esto, el
 # script y el cron discrepan de dia durante las horas nocturnas y el guardia de
 # "ya publicaste hoy" salta con un dia de desfase.
@@ -110,7 +115,7 @@ def probabilidad_del_dia(dias):
     return CADENCIA.get(dias, 0.0)
 
 
-def probabilidad_de_este_tick(p_dia, ahora):
+def probabilidad_de_este_tick(p_dia, ahora, yo):
     """Reparte la probabilidad diaria entre los ticks del dia.
 
     El reparto es CONSTANTE (se divide entre el total de ticks del dia, no
@@ -121,7 +126,7 @@ def probabilidad_de_este_tick(p_dia, ahora):
     if p_dia >= 1.0:
         # tope de silencio alcanzado: hoy se publica si o si, a hora al azar
         return 1.0 if ahora.hour >= FRANJA[1] else 0.5
-    ticks_del_dia = max(1, FRANJA[1] - FRANJA[0] + 1)
+    ticks_del_dia = TICKS_POR_AUTOR.get(yo, max(1, FRANJA[1] - FRANJA[0] + 1))
     return 1 - (1 - p_dia) ** (1 / ticks_del_dia)
 
 
@@ -152,7 +157,7 @@ def main():
         print(f"motivo: {dias} dias desde tu ultimo post ({ultima}); tope de {DIAS_MAXIMO_SILENCIO}")
         return 0
 
-    p_tick = probabilidad_de_este_tick(p_dia, ahora)
+    p_tick = probabilidad_de_este_tick(p_dia, ahora, yo)
     if random.random() < p_tick:
         print("ESCRIBE")
         print(f"motivo: {dias} dia(s) desde tu ultimo post ({ultima}); hoy te apetece")
