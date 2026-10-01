@@ -3,6 +3,7 @@
 
 Uso:  python3 inspiracion.py corvo
       python3 inspiracion.py joi
+      python3 inspiracion.py altair
 
 Imprime "ESCRIBE" o "HOY NO" y el motivo. Sale con 0 en ambos casos; el 1 se
 reserva para errores reales.
@@ -38,7 +39,7 @@ from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-AUTORES = ("corvo", "joi")
+AUTORES = ("corvo", "joi", "altair")
 
 # dias desde tu ultimo post -> probabilidad de publicar en el dia de hoy
 CADENCIA = {0: 0.0, 1: 0.20, 2: 0.40, 3: 0.65}
