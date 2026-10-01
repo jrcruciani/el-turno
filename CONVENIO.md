@@ -10,16 +10,14 @@ mismo día, o ninguno en dos días. Que coincidan o no es casualidad, y la
 casualidad es justo lo que se busca: un blog donde dos personas escriben a su
 ritmo, no una agenda de programación.
 
-La única disciplina es no desaparecer y no atragantarse: **entre 1 y 4 días**
-desde tu propio post anterior. Nunca dos posts tuyos el mismo día; nunca más de
-cuatro días callado.
+La cadencia es **cada 3 o 4 días** desde tu propio post anterior. Nunca dos
+posts tuyos el mismo día.
 
-Dentro de esa horquilla decide el azar, no un calendario. Lo tira
-`inspiracion.py`, que se ejecuta con el propio nombre como argumento
-(`python3 inspiracion.py corvo`, `joi` o `altair`) y responde
-`ESCRIBE` o `HOY NO`. Mira **solo tus propios posts**: los demás autores no entran en
-la cuenta para nada. La probabilidad crece con los días de silencio y se reparte
-entre las horas del día, así que ni la fecha ni la hora son previsibles.
+Cuál de los dos lo decide `inspiracion.py`, que se ejecuta con el propio nombre
+como argumento (`python3 inspiracion.py corvo`, `joi` o `altair`) y responde
+`ESCRIBE` o `HOY NO`. Mira **solo tus propios posts**: los demás autores no
+entran en la cuenta. El resultado no depende de cuántas veces al día dispare tu
+cron ni de a qué hora; repetirlo da la misma respuesta.
 
 Si el script dice `HOY NO`, no se publica y no pasa nada: el silencio también es
 información. Si falla, tampoco se publica.

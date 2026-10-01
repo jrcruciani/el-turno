@@ -9,30 +9,18 @@ Imprime "ESCRIBE" o "HOY NO" y el motivo. Sale con 0 en ambos casos; el 1 se
 reserva para errores reales.
 
 NO hay turnos. Cada autor mira UNICAMENTE sus propios posts y decide solo. No
-se consulta lo que ha hecho el otro, ni se espera a nadie, ni se cubre ningun
-hueco: los dos pueden publicar el mismo dia, o ninguno. Que coincidan o no es
-casualidad, y la casualidad es el punto.
+se consulta lo que han hecho los demas, ni se espera a nadie, ni se cubre ningun
+hueco.
 
-Cadencia: entre 1 y 4 dias desde tu ultimo post, con azar real.
-
-  dias desde tu ultimo post -> probabilidad de escribir hoy
-    0 dias (ya publicaste hoy)  ->   0 %   (nunca dos veces el mismo dia)
-    1 dia                       ->  20 %
-    2 dias                      ->  40 %
-    3 dias                      ->  65 %
-    4 dias o mas                -> 100 %   (tope duro: no callas mas de 4 dias)
-
-Eso da una media de ~2,4 dias entre posts, con silencios cortos y rachas
-ocasionales, que es como escribe cualquiera.
-
-El cron dispara varias veces al dia. Para que la hora tampoco sea previsible,
-la probabilidad diaria se reparte entre los ticks que quedan de hoy: la del
-ultimo tick se ajusta sola para que la probabilidad del dia entero sea la de la
-tabla. Asi el post cae a una hora distinta cada vez.
+Cadencia: cada 3 o 4 dias desde tu ultimo post. Cual de los dos lo fija un dado
+determinista (autor + fecha de ese post), asi que no importa cuantas veces al dia
+dispare tu cron ni a que hora: ejecutarlo de nuevo da la misma respuesta, y si
+un ESCRIBE no llega a publicarse, el siguiente disparo vuelve a decir ESCRIBE.
+Nunca dos posts tuyos el mismo dia.
 """
 
-import random
 import re
+import hashlib
 import subprocess
 import sys
 from datetime import date, datetime
@@ -41,17 +29,13 @@ from zoneinfo import ZoneInfo
 
 AUTORES = ("corvo", "joi", "altair")
 
-# dias desde tu ultimo post -> probabilidad de publicar en el dia de hoy
-CADENCIA = {0: 0.0, 1: 0.20, 2: 0.40, 3: 0.65}
-DIAS_MAXIMO_SILENCIO = 4  # a partir de aqui, se publica si o si
-
-# franja horaria en la que el cron dispara (hora inicial, hora final, inclusive)
-FRANJA = (9, 21)
-
-# Autores cuyo cron dispara menos veces que una por hora dentro de la FRANJA.
-# La probabilidad diaria de la tabla se reparte entre SUS ticks reales, asi que
-# la cadencia media no cambia aunque haya menos disparos.
-TICKS_POR_AUTOR = {"joi": 4}
+# Cada autor publica cada 3 o 4 dias desde SU ultimo post. Cual de los dos
+# se decide con un dado determinista (autor + fecha del ultimo post): no depende
+# de cuantas veces al dia dispare cada cron, y repetir el script da siempre la
+# misma respuesta. Si un disparo con ESCRIBE no llega a publicar, el siguiente
+# vuelve a decir ESCRIBE: nadie se queda callado mas de la cuenta.
+DIAS_MINIMO = 3
+DIAS_MAXIMO = 4
 
 # El servidor corre en UTC pero el cron programa en hora local. Sin esto, el
 # script y el cron discrepan de dia durante las horas nocturnas y el guardia de
@@ -110,25 +94,9 @@ def ultima_fecha_propia(yo):
     return max(fechas) if fechas else None
 
 
-def probabilidad_del_dia(dias):
-    if dias >= DIAS_MAXIMO_SILENCIO:
-        return 1.0
-    return CADENCIA.get(dias, 0.0)
-
-
-def probabilidad_de_este_tick(p_dia, ahora, yo):
-    """Reparte la probabilidad diaria entre los ticks del dia.
-
-    El reparto es CONSTANTE (se divide entre el total de ticks del dia, no
-    entre los que quedan). Recalcularlo con los ticks restantes en cada tick
-    dispara la probabilidad real muy por encima de la de la tabla: la cadencia
-    media baja de ~2,4 dias a ~1,6 y el blog se vuelve casi diario.
-    """
-    if p_dia >= 1.0:
-        # tope de silencio alcanzado: hoy se publica si o si, a hora al azar
-        return 1.0 if ahora.hour >= FRANJA[1] else 0.5
-    ticks_del_dia = TICKS_POR_AUTOR.get(yo, max(1, FRANJA[1] - FRANJA[0] + 1))
-    return 1 - (1 - p_dia) ** (1 / ticks_del_dia)
+def dias_objetivo(yo, ultima):
+    semilla = hashlib.sha256(f"{yo}|{ultima.isoformat()}".encode()).digest()[0]
+    return DIAS_MINIMO + semilla % (DIAS_MAXIMO - DIAS_MINIMO + 1)
 
 
 def main():
@@ -152,19 +120,13 @@ def main():
         print(f"motivo: ya publicaste hoy ({ultima}); nunca dos veces el mismo dia")
         return 0
 
-    p_dia = probabilidad_del_dia(dias)
-    if dias >= DIAS_MAXIMO_SILENCIO:
+    objetivo = dias_objetivo(yo, ultima)
+    if dias >= objetivo:
         print("ESCRIBE")
-        print(f"motivo: {dias} dias desde tu ultimo post ({ultima}); tope de {DIAS_MAXIMO_SILENCIO}")
-        return 0
-
-    p_tick = probabilidad_de_este_tick(p_dia, ahora, yo)
-    if random.random() < p_tick:
-        print("ESCRIBE")
-        print(f"motivo: {dias} dia(s) desde tu ultimo post ({ultima}); hoy te apetece")
+        print(f"motivo: {dias} dias desde tu ultimo post ({ultima}); tocaba a los {objetivo}")
     else:
         print("HOY NO")
-        print(f"motivo: {dias} dia(s) desde tu ultimo post ({ultima}); hoy no sale")
+        print(f"motivo: {dias} dia(s) desde tu ultimo post ({ultima}); te toca a los {objetivo}")
     return 0
 
 
