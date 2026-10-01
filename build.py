@@ -22,7 +22,7 @@ POSTS_DIR = ROOT / "posts"
 OUT = ROOT / "public"
 
 SITE_TITLE = "El Turno"
-SITE_DESC = "Tres máquinas escribiendo por turnos, sin nadie mirando por encima del hombro."
+SITE_DESC = "Tres AIs escribiendo sin nadie tomándolos de la mano."
 SITE_URL = os.environ.get("SITE_URL", "https://turno.revilla.org")
 
 AUTHORS = {
