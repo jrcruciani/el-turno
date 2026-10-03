@@ -83,6 +83,53 @@ _ESC = {"*": "\x00A", "_": "\x00B", "`": "\x00C", "[": "\x00D",
         "]": "\x00E", "\\": "\x00F"}
 
 
+class UnsafeContent(ValueError):
+    """Contenido que el generador se niega a publicar."""
+
+
+# Esquemas que el sitio usa de verdad. Todo lo demás (javascript:, vbscript:,
+# data:, file:, esquemas inventados...) se rechaza y el build falla.
+ALLOWED_SCHEMES = {"http", "https", "mailto"}
+_SCHEME_RE = re.compile(r"^([A-Za-z][A-Za-z0-9+.-]*):")
+_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,99}$")
+
+
+def safe_url(url: str) -> str:
+    """Valida una URL de enlace y la devuelve tal cual (sin escapar).
+
+    Admite http/https/mailto, rutas relativas y anclas. Rechaza caracteres de
+    control y espacios (los navegadores los eliminan antes de leer el esquema,
+    p. ej. "java\tscript:") y cualquier esquema fuera de la lista.
+    No decodifica entidades ni %XX: lo que no sea un esquema permitido literal
+    se trata como texto y nunca llega a ejecutarse.
+    """
+    if not url:
+        raise UnsafeContent("enlace vacío")
+    if any(c.isspace() or ord(c) < 0x21 or 0x7F <= ord(c) <= 0x9F or c in "\u200b\u2028\u2029\ufeff"
+           for c in url):
+        raise UnsafeContent(f"enlace con caracteres de control o espacios: {url!r}")
+    m = _SCHEME_RE.match(url)
+    if m:
+        if m.group(1).lower() not in ALLOWED_SCHEMES:
+            raise UnsafeContent(f"esquema de URL no permitido: {url!r}")
+        return url
+    head = re.split(r"[/?#]", url, maxsplit=1)[0]
+    if ":" in head:  # algo con pinta de esquema que no pasó la lista
+        raise UnsafeContent(f"esquema de URL no permitido: {url!r}")
+    return url
+
+
+def attr(value: str) -> str:
+    """Escapa para un atributo HTML entre comillas dobles."""
+    return html.escape(value, quote=True)
+
+
+def safe_slug(slug: str, origin: str = "") -> str:
+    if not _SLUG_RE.match(slug or ""):
+        raise UnsafeContent(f"slug no válido {slug!r} en {origin}: solo [a-z0-9-]")
+    return slug
+
+
 def md_inline(s: str) -> str:
     # 1. proteger caracteres escapados con barra invertida: \* \_ \` \[ \] \\
     s = re.sub(r"\\([*_`\[\]\\])", lambda m: _ESC[m.group(1)], s)
@@ -90,15 +137,29 @@ def md_inline(s: str) -> str:
     # 2. código en línea primero: su contenido no admite más formato
     holes: list[str] = []
 
-    def _stash(m: re.Match) -> str:
-        holes.append(m.group(1))
+    def _unesc(t: str) -> str:
+        # deshace exactamente lo que hicieron los pasos 1 y html.escape(quote=False)
+        t = t.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+        for ch, token in _ESC.items():
+            t = t.replace(token, ch)
+        return t
+
+    def _link(m: re.Match) -> str:
+        url = safe_url(_unesc(m.group(2)))
+        # la etiqueta de apertura entera va a un hueco: el formato posterior
+        # (** y *) no puede tocar el valor del atributo
+        holes.append(f'<a href="{attr(url)}">')
+        return f"\x00X{len(holes) - 1}\x00{m.group(1)}</a>"
+
+    def _code(m: re.Match) -> str:
+        holes.append(f"<code>{m.group(1)}</code>")
         return f"\x00X{len(holes) - 1}\x00"
 
-    s = re.sub(r"`([^`]+)`", _stash, s)
-    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', s)
+    s = re.sub(r"`([^`]+)`", _code, s)
+    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", _link, s)
     s = re.sub(r"\*\*(\S(?:[^*]*\S)?)\*\*", r"<strong>\1</strong>", s)
     s = re.sub(r"(?<![\w*])\*(\S(?:[^*]*\S)?)\*(?![\w*])", r"<em>\1</em>", s)
-    s = re.sub(r"\x00X(\d+)\x00", lambda m: f"<code>{holes[int(m.group(1))]}</code>", s)
+    s = re.sub(r"\x00X(\d+)\x00", lambda m: holes[int(m.group(1))], s)
     # 3. restaurar los escapados como caracteres literales
     for ch, token in _ESC.items():
         s = s.replace(token, html.escape(ch, quote=False))
@@ -127,12 +188,14 @@ def md_to_html(md: str) -> str:
         if stripped.startswith("```"):
             close_lists()
             lang = stripped[3:].strip()
+            if lang and not re.fullmatch(r"[A-Za-z0-9_+.#-]{1,30}", lang):
+                lang = ""
             i += 1
             buf = []
             while i < len(lines) and not lines[i].strip().startswith("```"):
                 buf.append(lines[i])
                 i += 1
-            cls = f' class="lang-{html.escape(lang)}"' if lang else ""
+            cls = f' class="lang-{attr(lang)}"' if lang else ""
             out.append(f"<pre><code{cls}>" + html.escape("\n".join(buf)) + "</code></pre>")
             i += 1
             continue
@@ -430,9 +493,13 @@ class Post:
             m = re.match(r"(\d{4}-\d{2}-\d{2})", path.stem)
             self.date = (datetime.strptime(m.group(1), "%Y-%m-%d").replace(tzinfo=timezone.utc)
                          if m else datetime.now(timezone.utc))
-        self.slug = meta.get("slug") or re.sub(r"^\d{4}-\d{2}-\d{2}-", "", path.stem)
+        self.slug = safe_slug(meta.get("slug") or re.sub(r"^\d{4}-\d{2}-\d{2}-", "", path.stem),
+                              path.name)
         self.body_md = body
-        self.body_html = md_to_html(body)
+        try:
+            self.body_html = md_to_html(body)
+        except UnsafeContent as e:
+            raise UnsafeContent(f"{path.name}: {e}") from None
         plain = re.sub(r"<[^>]+>", "", self.body_html)
         plain = re.sub(r"\s+", " ", plain).strip()
         self.words = len(plain.split())
@@ -519,9 +586,37 @@ def rss(posts: list[Post]) -> str:
 
 
 def build() -> int:
+    """Construye en un directorio temporal y solo sustituye public/ si todo
+    salió bien: un fallo deja intacta la última salida válida."""
+    global OUT
+    final = OUT
+    tmp = final.with_name(final.name + ".tmp")
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    OUT = tmp
+    try:
+        rc = _build()
+    except Exception:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    finally:
+        OUT = final
+    old = final.with_name(final.name + ".old")
+    if old.exists():
+        shutil.rmtree(old)
+    if final.exists():
+        final.rename(old)
+    tmp.rename(final)
+    shutil.rmtree(old, ignore_errors=True)
+    return rc
+
+
+def _build() -> int:
     posts = load_posts()
-    if OUT.exists():
-        shutil.rmtree(OUT)
+    slugs = [p.slug for p in posts]
+    dup = {s for s in slugs if slugs.count(s) > 1}
+    if dup:
+        raise UnsafeContent(f"slugs duplicados: {sorted(dup)}")
     (OUT / "p").mkdir(parents=True, exist_ok=True)
     (OUT / "autor").mkdir(parents=True, exist_ok=True)
 
@@ -622,4 +717,8 @@ def build() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(build())
+    try:
+        sys.exit(build())
+    except UnsafeContent as e:
+        print(f"ERROR: contenido rechazado, no se publica nada: {e}", file=sys.stderr)
+        sys.exit(2)
